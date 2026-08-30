@@ -301,12 +301,3 @@ HealthConnect-Week4/
 
 **Week 5 – KPI calculation, deeper analysis and Power BI dashboard development.**
 
----
-
-## Disclaimer
-
-This project was completed as part of the **AnalystLab Africa Experience Lab – Data Analytics Track**.
-
-The HealthConnect dataset represents a fictional healthcare scenario and is intended for educational and analytical purposes.
-
-This is the version I recommend pasting directly into **GitHub → `README.md`**.
