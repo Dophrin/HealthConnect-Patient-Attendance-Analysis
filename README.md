@@ -1,5 +1,3 @@
-
-
 # HealthConnect Clinic Experience Lab 
 
 **AnalystLab Africa Experience Lab | Data Analytics Track | Tool: Power BI**
@@ -14,7 +12,7 @@ The clinic aims to use **data and AI** to improve decision-making, reduce missed
 
 **How can HealthConnect Clinic use data and AI to reduce missed appointments and improve the patient support experience?**
 
-As part of the Data Analytics track, Week 4 focused on understanding the appointment dataset, assessing data quality, identifying important variables, defining business questions, proposing KPIs, and establishing an analytical approach for deeper analysis in subsequent weeks.
+As part of the Data Analytics track, Week 4 focused on understanding the appointment dataset, assessing data quality, identifying important variables, defining business questions, proposing KPIs, and establishing an analytical approach. Week 5 moved into practical implementation: data cleaning, KPI calculation, exploratory analysis, and an initial Power BI dashboard.
 
 ---
 
@@ -26,8 +24,8 @@ As part of the Data Analytics track, Week 4 focused on understanding the appoint
 * Assess data quality and consistency.
 * Identify variables relevant to appointment attendance and no-shows.
 * Define key business questions.
-* Propose and justify relevant KPIs.
-* Establish an analytical approach for future Power BI analysis.
+* Propose, then calculate, relevant KPIs.
+* Build an initial Power BI dashboard and translate findings into recommendations.
 
 ---
 
@@ -36,7 +34,7 @@ As part of the Data Analytics track, Week 4 focused on understanding the appoint
 The **HealthConnect Appointment Dataset** contains fictional and anonymised appointment-level records used to study attendance behaviour and support a no-show reduction strategy.
 
 * **Records:** 5,000 appointments
-* **Variables:** 18
+* **Variables:** 18 (original), 20 in the cleaned Week 5 version (2 additional missingness-flag columns)
 * **Appointment period:** January 2025 – June 2026
 * **Primary outcome:** `appointment_outcome`
 
@@ -62,84 +60,43 @@ The **HealthConnect Appointment Dataset** contains fictional and anonymised appo
 | Cancelled |       263 |       5.3% |
 | **Total** | **5,000** |   **100%** |
 
-**Key observation:** No-shows are the largest single outcome category, making missed appointments a significant operational issue for further investigation.
+**Key observation:** No-shows are the largest single outcome category, making missed appointments a significant operational issue.
 
 ---
 
 ## Data Dictionary Review
 
-All **18 variables** were reviewed against the HealthConnect Data Dictionary.
-
-Key variables identified for no-show analysis include:
-
-* **Age / Age Group** – investigates whether attendance differs across age groups.
-* **Appointment Type** – examines whether no-show behaviour varies by visit type.
-* **Booking Lead Days** – assesses whether booking further in advance relates to missed appointments.
-* **Previous Appointments / Previous No-Shows** – investigates attendance history.
-* **Reminder Sent / Reminder Channel** – examines the relationship between reminders and attendance.
-* **Distance to Clinic** – investigates whether travel distance relates to missed appointments.
-* **Waiting Time** – examines whether expected waiting time relates to attendance or cancellations.
-* **Appointment Outcome** – serves as the primary outcome variable.
-
-No undocumented or unexpected variables were identified.
+All **18 variables** were reviewed against the HealthConnect Data Dictionary. Key variables identified for no-show analysis include age/age group, appointment type, booking lead days, previous appointments/no-shows, reminder sent/channel, distance to clinic, waiting time, and appointment outcome (the target). No undocumented or unexpected variables were identified.
 
 ---
 
-## Initial Data Quality Assessment
+## Data Quality Assessment & Week 5 Cleaning
 
 | Check                       | Finding                             |
-| --------------------------- | ----------------------------------- |
-| Missing Values              | Present in three fields             |
-| Duplicate Records           | None identified                     |
-| Appointment ID              | Unique across all 5,000 records     |
-| Data Types                  | Consistent with the Data Dictionary |
-| Invalid/Inconsistent Values | None identified                     |
-| Potential Outliers          | None flagged                        |
-| Outcome Categories          | Consistent with documented values   |
+| ---------------------------- | ------------------------------------ |
+| Missing Values               | Present in three fields (see below)  |
+| Duplicate Records            | None identified                      |
+| Appointment ID               | Unique across all 5,000 records      |
+| Data Types                   | Consistent with the Data Dictionary  |
+| Invalid/Inconsistent Values  | None identified                      |
+| Potential Outliers           | None flagged                         |
+| Outcome Categories           | Consistent with documented values    |
 
-### Missing Values
+### Missing Values & How They Were Handled (Week 5)
 
-| Variable                | Missing Records | Assessment                            |
-| ----------------------- | --------------: | ------------------------------------- |
-| `reminder_channel`      |           1,366 | Expected because no reminder was sent |
-| `distance_to_clinic_km` |              90 | Requires documented handling          |
-| `waiting_time_minutes`  |              60 | Requires documented handling          |
+| Variable                | Missing | Decision                                                   |
+| ------------------------ | ------: | ----------------------------------------------------------- |
+| `reminder_channel`       |   1,366 | Filled with `"No Reminder"` — matches `reminder_sent = No`   |
+| `distance_to_clinic_km`  |      90 | Filled with median (8.7 km); flagged in `distance_was_missing` |
+| `waiting_time_minutes`   |      60 | Filled with median (24 min); flagged in `waiting_time_was_missing` |
 
-The **1,366 missing `reminder_channel` values** correspond exactly to records where `reminder_sent = No`. This is therefore expected structure rather than a data-quality defect.
+`Cancelled` appointments (263 records, 5.3%) were excluded from the No-Show Rate and Attendance Rate denominators, since a cancellation is a distinct outcome from a no-show, and tracked separately as a Cancellation Rate.
 
-The missing values in `distance_to_clinic_km` and `waiting_time_minutes` are relatively small but require a documented handling approach before KPI calculations.
-
----
-
-## Initial Analytical Observations
-
-### Appointment Outcomes
-
-No-shows account for **48.5%** of all appointments, making them the largest single outcome category.
-
-### Previous No-Show History
-
-The preliminary descriptive analysis indicates that no-show rates increase with previous no-show history:
-
-* **0 previous no-shows:** approximately 44%
-* **3 previous no-shows:** approximately 68%
-
-This makes previous attendance behaviour an important variable for further segmentation.
-
-### Reminder Status
-
-The preliminary analysis showed:
-
-* **Reminder sent:** 47.4% no-show rate
-* **No reminder:** 51.4% no-show rate
-
-These observations are **descriptive associations only** and should not be interpreted as evidence that reminders cause improved attendance.
+The cleaned dataset was saved separately as `HealthConnect_Appointment_Data_CLEANED.csv` — the original file was never modified.
 
 ---
 
 ## Business Questions
-
-The Week 4 analysis identified the following questions for further investigation:
 
 1. What proportion of appointments are missed?
 2. Which patient or appointment characteristics are associated with no-shows?
@@ -150,154 +107,118 @@ The Week 4 analysis identified the following questions for further investigation
 
 ---
 
-## Proposed KPIs
+## KPIs — Calculated (Week 5)
 
-| KPI                                 | Business Question                                              | Why It Matters                                |
-| ----------------------------------- | -------------------------------------------------------------- | --------------------------------------------- |
-| Appointment No-Show Rate            | How frequently are appointments missed?                        | Measures the scale of the problem             |
-| Attendance Rate                     | What proportion of appointments are attended?                  | Tracks appointment utilisation                |
-| Reminder Response / Attendance Rate | Are reminders associated with better attendance?               | Helps assess reminder performance             |
-| Repeat No-Show Rate                 | Are patients with previous no-shows more likely to miss again? | Helps identify higher-risk groups             |
-| Appointment Slot Utilisation Rate   | How efficiently are available slots being used?                | Connects attendance to operational efficiency |
+| KPI                              | Result                                   | Business Question Answered                     |
+| --------------------------------- | ----------------------------------------- | ------------------------------------------------ |
+| Appointment No-Show Rate          | **51.2%**                                | How frequently are appointments missed? (Q1)    |
+| Attendance Rate                   | **48.8%**                                | What proportion of appointments are attended?   |
+| Reminder-Linked Attendance Rate   | 50.1% (reminder sent) vs 45.4% (none)    | Does reminder status relate to attendance? (Q3) |
+| Repeat No-Show Rate               | 57.8% (prior no-show) vs 46.3% (none)    | Does history relate to future attendance? (Q6)  |
 
-> **Week 4 scope:** The KPIs were identified and justified. KPI calculation and dashboard visualisation are planned for later stages of the project.
+> **Appointment Slot Utilisation Rate**, proposed in Week 4, was dropped in Week 5 — the dataset only contains booked appointments with no record of total available slots, so it cannot be calculated from this data.
 
----
-
-## Proposed Analysis Approach
-
-### 1. Data Inspection
-
-Validate structure, data types, ranges, and values against the Data Dictionary.
-
-### 2. Data Cleaning
-
-Document and apply an appropriate approach to missing values in:
-
-* `distance_to_clinic_km`
-* `waiting_time_minutes`
-
-### 3. Descriptive Analysis
-
-Summarise appointment volumes by:
-
-* Appointment type
-* Day
-* Time
-* Demographic group
-
-### 4. No-Show Segmentation
-
-Analyse no-show rates across the key variables identified during Week 4.
-
-### 5. Relationship Analysis
-
-Investigate relationships between no-shows and:
-
-* Reminder status
-* Reminder channel
-* Distance
-* Waiting time
-* Previous no-show history
-* Booking behaviour
-
-### 6. KPI Development
-
-Calculate the proposed KPIs using Power BI.
-
-### 7. Visualisation
-
-Build a Power BI dashboard presenting KPI performance and segment comparisons.
-
-### 8. Business Recommendations
-
-Translate analytical findings into practical recommendations for reducing missed appointments and improving patient experience.
+Cancellation Rate (5.3%) is tracked as operational context rather than a core KPI.
 
 ---
 
-## Assumptions and Limitations
+## Power BI Dashboard (Week 5)
 
-### Assumptions
+<img width="1287" height="717" alt="Week 5 Dashboard" src="https://github.com/user-attachments/assets/63204fa7-1501-442d-b8ed-b0e7c3b22555" />
 
-* The dataset represents a fictional simulation of clinic appointment behaviour.
-* Patterns identified are illustrative and are not clinically validated.
-
-### Limitations
-
-* `distance_to_clinic_km` contains 90 missing records.
-* `waiting_time_minutes` contains 60 missing records.
-* The dataset does not include operational factors such as appointment cost, staff availability, or clinic capacity.
-
-### Analytical Risk
-
-The Week 4 findings are descriptive. Observed relationships should not automatically be interpreted as causal relationships.
-
-For example, a lower no-show rate among patients who received reminders does not prove that reminders caused better attendance.
-
-### Ethical Consideration
-
-The dataset is fictional and anonymised. Any extension of this analysis to real patient data would need to comply with applicable healthcare data protection and privacy requirements.
+The dashboard includes KPI cards (No-Show Rate, Attendance Rate, Cancellation Rate), an outcome donut chart, and comparison bar charts for reminder status, prior no-show history, distance band, and waiting-time band, with a slicer for interactive filtering.
 
 ---
 
-## Week 5 Focus
+## Exploratory Data Analysis — Key Findings (Week 5)
 
-The next stage of the project will focus on:
+* **Distance:** No-show rate rises steadily from 48.7% (0–5km) to 56.9% (15km+).
+* **Prior no-show history:** 57.8% (has history) vs 46.3% (no history) — the strongest predictor found.
+* **Reminders:** No Reminder has the highest no-show rate (54.6%); SMS has the lowest among all reminder channels (47.9%), ahead of Email (51.0%) and WhatsApp (52.7%).
+* **Waiting time:** No meaningful relationship with no-shows (49.9%–52.6% across all bands).
+* **Appointment type:** Follow-up appointments are missed more (54.2%) than General Consultations (49.1%).
+* **Day of week:** Monday (53.1%) and Sunday (52.8%) run slightly higher than Friday (48.7%) and Tuesday (48.9%).
 
-* Finalising the missing-data handling approach.
-* Calculating the five proposed KPIs.
-* Conducting deeper no-show segmentation.
-* Comparing attendance across key patient and appointment characteristics.
-* Developing Power BI visuals.
-* Building the initial HealthConnect dashboard.
-* Translating findings into actionable recommendations.
+These are descriptive associations, not proof of causation.
+
+---
+
+## Business Recommendations
+
+* Make SMS the default reminder channel; ensure every appointment has a reminder scheduled.
+* Flag patients with prior no-show history for extra confirmation contact.
+* Investigate transport support or telehealth options for patients 15km+ from the clinic.
+* Review the follow-up appointment process specifically.
+* Do not prioritise waiting-time reduction as a no-show intervention — no meaningful effect found here.
+
+---
+
+## Assumptions, Limitations & Risk
+
+* The dataset is a fictional simulation; patterns are illustrative, not clinically validated.
+* Slot Utilisation Rate could not be calculated — no total-slots field exists in the data.
+* All relationships identified (distance, reminders, history) are correlational, not causal.
+* The dataset omits operational factors such as staff availability or clinic capacity.
+* Any extension to real patient data would require compliance with applicable healthcare data-protection requirements.
+
+---
+
+## Cross-Track Collaboration
+
+Shared KPI results and segment-level no-show rates (prior history, distance, reminders) with the **Data Science track**, as candidate predictive features and as evidence supporting the exclusion of `Cancelled` appointments from their target variable definition.
 
 ---
 
 ## Tools Used
 
-* **Power BI** – Data analysis, KPI development and dashboarding
+* **Power BI** – Data cleaning (Power Query), KPI development (DAX measures), and dashboarding
 * **Microsoft Excel** – Data Dictionary review
-* **CSV** – Appointment dataset
+* **CSV** – Appointment dataset (raw and cleaned versions)
 
 ---
 
 ## Repository Structure
 
 ```text
-HealthConnect-Week4/
+HealthConnect-Project/
 │
 ├── README.md
 │
-├── documentation/
-│   ├── HealthConnect_Project_Summary.pdf
-│   └── HealthConnect_Data_Analytics_Deliverable.pdf
+├── week4/
+│   ├── HealthConnect_Week4_Data_Analytics_Initial_Analysis.docx
+│   └── Week4_Project_Summary.docx
+│
+├── week5/
+│   ├── HealthConnect_Week5_Analytics_Report.docx
+│   ├── Week5_Project_Summary.docx
+│   └── HealthConnect_Appointment_Data_CLEANED.csv
 │
 ├── data/
+│   ├── HealthConnect_Appointment_Data.csv        (original, unmodified)
 │   └── HealthConnect_Data_Dictionary.xlsx
 │
 └── screenshots/
-    └── Power BI / analysis screenshots
+    └── Power BI dashboard screenshots
 ```
 
 ---
 
 ## Project Status
 
-**Current Stage:** Week 4 – Project Kickoff & Problem Understanding
+**Current Stage:** Week 5 – Exploratory Analysis, KPI Development & Business Insights
 
 ### Completed
 
-* Business problem understanding
-* Dataset review
-* Data Dictionary validation
-* Initial data-quality assessment
-* Preliminary descriptive exploration
-* Business question definition
-* KPI identification and justification
-* Proposed analytical approach
+* Business problem understanding (Week 4)
+* Dataset review, Data Dictionary validation, data-quality assessment (Week 4)
+* Business question definition and KPI proposal (Week 4)
+* Data cleaning with documented decisions (Week 5)
+* KPI calculation and interpretation (Week 5)
+* Exploratory data analysis across all key variables (Week 5)
+* Power BI dashboard (KPI cards, outcome donut, segment comparison charts) (Week 5)
+* Business insights and recommendations (Week 5)
+* Cross-track collaboration with Data Science (Week 5)
 
 ### Next Stage
 
-**Week 5 – KPI calculation, deeper analysis and Power BI dashboard development.**
-
+**Week 6 – Refine the dashboard, deepen relationship analysis, and align with Data Science track findings.**
